@@ -5,28 +5,20 @@ import dotenv from "dotenv";
 dotenv.config();
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-  api_key: process.env.CLOUDINARY_API_KEY!,
-  api_secret: process.env.CLOUDINARY_API_SECRET!,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-interface LocalFile {
-  path: string;
-}
-
 /**
- * @param {LocalFile | LocalFile[]} localFilePaths - Single file path or array of file paths.
- * @returns {Promise<string | string[] | null>} - Secure URL(s) of the uploaded file(s).
+ * @param {string | string[]} localFilePaths - Single file path or array of file paths.
+ * @returns {Promise<string | string[]>} - Secure URL(s) of the uploaded file(s).
  */
-const uploadOnCloudinary = async (
-  localFilePaths: LocalFile | LocalFile[]
-): Promise<string | string[] | null> => {
-  if (
-    !localFilePaths ||
-    (Array.isArray(localFilePaths) && localFilePaths.length === 0)
-  )
-    return null;
 
+const uploadOnCloudinary = async (localFilePaths) => {
+  if (!localFilePaths || localFilePaths.length === 0) return null;
+
+  // Ensure localFilePaths is always an array (single file -> array)
   const filePaths = Array.isArray(localFilePaths)
     ? localFilePaths
     : [localFilePaths];
@@ -35,12 +27,15 @@ const uploadOnCloudinary = async (
 
   try {
     const uploadPromises = filePaths.map(async (filePath) => {
+      // Normalize path to handle Windows-style backslashes
+
       const normalizedPath = filePath.path.replace(/\\/g, "/");
 
       const response = await cloudinary.uploader.upload(normalizedPath, {
         resource_type: "auto",
       });
 
+      // Delete the local file after uploading
       fs.unlinkSync(normalizedPath);
 
       return response.secure_url;
@@ -48,18 +43,16 @@ const uploadOnCloudinary = async (
 
     const uploadedUrls = await Promise.all(uploadPromises);
 
+    // Return single URL if only one file was uploaded, else return an array
     return uploadedUrls.length === 1 ? uploadedUrls[0] : uploadedUrls;
   } catch (error) {
     console.error("Error uploading to Cloudinary:", error);
-
-    filePaths.forEach((file) => {
-      try {
-        fs.unlinkSync(file.path);
-      } catch (e) {
-        console.error("Error deleting file:", e);
-      }
-    });
-
+    // Ensure cleanup even if error occurs
+    if (Array.isArray(filePaths)) {
+      filePaths.forEach((file) => fs.unlinkSync(file.path));
+    } else {
+      fs.unlinkSync(filePaths[0]);
+    }
     return null;
   }
 };
