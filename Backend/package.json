@@ -7,7 +7,6 @@
     "start": "node -r dotenv/config ./src/index.js"
   },
   "dependencies": {
-    "@prisma/client": "^6.10.1",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.7.0",
     "cookie-parser": "^1.4.7",
@@ -21,8 +20,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "prisma": "^6.10.1"
-  }
+  "description": ""
 }
