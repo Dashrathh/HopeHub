@@ -1,171 +1,159 @@
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import db from "../utils/db.js";
+import { Product } from "../model/Product.model.js";
 
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+
+// Create a new product (donation)
 export const createProduct = async (req, res) => {
   try {
-    const { title, description, category, image, userId } = req.body;
-    if (
-      ![title, description, category, image, userId].some(
-        (field) => field.trim() === ""
-      )
-    ) {
-      return res.status(400).json(new ApiError(400, "All fields are required"));
-    }
-    let uploadedImages = [];
+    const { title, description, category, image } = req.body;
+    const userId = req.user._id;
 
-    if (req.files?.images) {
-      const files = req.files.image;
+    const uploadedImages = Array.isArray(req.files?.image)
+      ? await uploadOnCloudinary(req.files.image)
+      : req.files?.images
+      ? [await uploadOnCloudinary([req.files.image])]
+      : [];
 
-      if (Array.isArray(files)) {
-        const results = await uploadOnCloudinary(files);
-        uploadedImages = results.filter((url) => url !== null);
-        const result = await uploadOnCloudinary([files]);
-        uploadedImages = result.filter((url) => url !== null);
-      }
+    console.log(uploadedImages);
+
+    if (!uploadedImages) {
+      throw new ApiError(400, "error while upload image ");
     }
-    const product = await db.product.create({
-      data: {
-        title,
-        description,
-        category,
-        image: uploadedImages,
-        userId,
-      },
+
+    const newProduct = await Product.create({
+      title,
+      description,
+      category,
+      image: uploadOnCloudinary,
+      userId,
     });
 
-    console.log("all product are", product);
     return res
       .status(201)
-      .json(new ApiResponse(product, "Product has been created successful"));
-  } catch (error) {
+      .json({ message: "Product created", product: newProduct });
+  } catch (err) {
     return res
       .status(500)
-      .json(
-        new ApiError(
-          500,
-          "internal server error || error while create product",
-          error.message
-        )
-      );
+      .json({ message: "Server error", error: err.message });
   }
 };
 
-/**
- * List all products
- * @param {*} req
- * @param {*} res
- */
+// Get all products with optional filter
 export const getAllProducts = async (req, res) => {
   try {
-    const AllProduct = await db.product.findMany({
-      include: {
-        user: true,
-      },
-    });
-    if (!AllProduct) {
-      return res.status(401).json(new ApiError(404, "Product not found!"));
-    }
-    res
+    const { status, category } = req.query;
+    const filter = {};
+
+    if (status) filter.status = status;
+    if (category) filter.category = category;
+
+    const products = await Product.find(filter).populate(
+      "userId",
+      "username email"
+    );
+
+    return res.status(200).json({ products });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
+// Get a product by ID
+export const getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).populate(
+      "userId",
+      "username email"
+    );
+
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    return res.status(200).json({ product });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
+// Claim a product
+export const claimProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (product.status !== "AVAILABLE")
+      return res
+        .status(400)
+        .json({ message: "Product is already claimed or received" });
+
+    product.status = "CLAIMED";
+    await product.save();
+
+    return res.status(200).json({ message: "Product claimed", product });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
+// Mark as received
+export const markProductAsReceived = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (product.status !== "CLAIMED")
+      return res.status(400).json({ message: "Product is not claimed yet" });
+
+    product.status = "RECEIVED";
+    await product.save();
+
+    return res
       .status(200)
-      .json(new ApiResponse(AllProduct, "Get all product successfully"));
-  } catch (error) {
-    // console.error(error)
-    res
+      .json({ message: "Product marked as received", product });
+  } catch (err) {
+    return res
       .status(500)
-      .json(
-        new ApiError(
-          500,
-          "internal error while getting all product",
-          error.message
-        )
-      );
+      .json({ message: "Server error", error: err.message });
   }
 };
 
-export const getSingleProduct = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const singleProduct = await db.product.findUnique({
-      where: { id },
-      include: { user: true },
-    });
-    if (!singleProduct) {
-      return res.status(401).json(new ApiError(404, "Product not found!"));
-    }
-    res
-      .status(201)
-      .json(new ApiResponse(singleProduct, "Product fetched successfully"));
-  } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiError(
-          500,
-          "internal error ||  while getting single product  ",
-          error.message
-        )
-      );
-  }
-};
-
-//   update Products
-export const updateProduct = async (req, res) => {
-  const { id } = req.params;
-  const { title, description, category, image, userId } = req.body;
-  if (
-    ![title, description, category, image, userId].some(
-      (field) => field.trim() === ""
-    )
-  ) {
-    return res.status(400).json(new ApiError(400, "All fields are required"));
-  }
-  try {
-    const updatedProduct = await db.product.update({
-      where: { id },
-      data: {
-        title,
-        description,
-        category,
-        image,
-        userId,
-      },
-    });
-    return res
-      .status(204)
-      .json(new ApiResponse(updatedProduct, "Product updated successfully"));
-  } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiError(
-          500,
-          "internal error ||  while updating product  ",
-          error.message
-        )
-      );
-  }
-};
-
+// Delete a product
 export const deleteProduct = async (req, res) => {
-  const { id } = req.params;
   try {
-    await db.product.delete({
-      where: { id },
-    });
+    const product = await Product.findById(req.params.id);
 
-    return res
-      .status(200)
-      .json(new ApiResponse({}, "Product deleted successfully"));
-  } catch (error) {
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    if (String(product.userId) !== String(req.user._id)) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to delete this product" });
+    }
+
+    await Product.findByIdAndDelete(req.params.id);
+
+    return res.status(200).json({ message: "Product deleted" });
+  } catch (err) {
     return res
       .status(500)
-      .json(
-        new ApiError(
-          500,
-          "internal error ||  while removing the product  ",
-          error.message
-        )
-      );
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
+// Get all products donated by a specific user
+export const getUserProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ userId: req.user._id });
+
+    return res.status(200).json({ products });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
