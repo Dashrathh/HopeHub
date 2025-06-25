@@ -3,7 +3,7 @@ import { User } from "../db/models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { AUTH_FAILED } from "../constants.js";
-import { generateTokens, isPasswordCorrect } from "../utils/Helper.js";
+import { generateTokens, isPasswordCorrect } from "../utils/helper.js";
 
 
 const cookieOptions = {

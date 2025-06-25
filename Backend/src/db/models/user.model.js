@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { hashPassword, isPasswordCorrect } from "../../utils/Helper.js";
+import { hashPassword, isPasswordCorrect } from "../../utils/helper.js";
 
 const userSchema = new Schema(
     {

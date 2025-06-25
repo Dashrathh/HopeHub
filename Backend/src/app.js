@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { productRouter } from "./routes/product.routes.js";
 import { userRouter } from "./routes/user.routes.js";
 import { ApiError } from "./utils/ApiError.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ export const port = process.env.PORT || 3001;
 export const app = express();
 app.use(express.json({ limit: "50KB" }));
 app.use(express.urlencoded({ limit: "50KB", extended: true }));
+app.use(cookieParser());
 
 /**
  * Routes

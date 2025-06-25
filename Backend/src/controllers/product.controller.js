@@ -1,40 +1,66 @@
 import { Product } from "../db/models/Product.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 // Create a new product (donation)
+
+/**
+ * @param {Request} req
+ * @param {Response} res
+ * @param {NextFunction} next
+ */
 export const createProduct = async (req, res) => {
   try {
-    const { title, description, category, image } = req.body;
+    const { title, description, category } = req.body;
     const userId = req.user._id;
 
-    const uploadedImages = Array.isArray(req.files?.image)
-      ? await uploadOnCloudinary(req.files.image)
-      : req.files?.images
-      ? [await uploadOnCloudinary([req.files.image])]
-      : [];
 
-    console.log(uploadedImages);
+    /**
+     * Check Product exists
+     */
+    const productExists = await Product.findOne({
+      title,
+      description,
+      category
+    })
+
+    if (productExists) {
+      return res.status(409).json(new ApiError(409, "Product already Exists"));
+    }
+
+    /**
+     * Upload files
+     */
+    const uploadedImages = Array.isArray(req.files?.images)
+      ? await uploadOnCloudinary(req.files.images)
+      : req.files?.images
+        ? [await uploadOnCloudinary([req.files.images])]
+        : [];
 
     if (!uploadedImages) {
       throw new ApiError(400, "error while upload image ");
     }
 
+    /**
+     * Create Product
+     */
     const newProduct = await Product.create({
       title,
       description,
       category,
-      image: uploadOnCloudinary,
+      image: uploadedImages,
       userId,
     });
 
     return res
       .status(201)
-      .json({ message: "Product created", product: newProduct });
+      .json(new ApiResponse(newProduct, "Product created"));
   } catch (err) {
     return res
       .status(500)
-      .json({ message: "Server error", error: err.message });
+      .json(new ApiError(500, err.message, err));
   }
 };
 
@@ -52,11 +78,11 @@ export const getAllProducts = async (req, res) => {
       "username email"
     );
 
-    return res.status(200).json({ products });
+    return res.json(new ApiResponse(products, "Fetched all products"));
   } catch (err) {
     return res
       .status(500)
-      .json({ message: "Server error", error: err.message });
+      .json(new ApiError(500, err.message, err));
   }
 };
 
@@ -68,13 +94,13 @@ export const getProductById = async (req, res) => {
       "username email"
     );
 
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json(new ApiError(404, "Product not found"));
 
-    return res.status(200).json({ product });
+    return res.status(200).json(new ApiResponse(product, "Fetched product details"));
   } catch (err) {
     return res
       .status(500)
-      .json({ message: "Server error", error: err.message });
+      .json(new ApiError(500, err.message, err));
   }
 };
 
@@ -83,20 +109,21 @@ export const claimProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
 
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json(new ApiError(404, "Product not found"));
+
     if (product.status !== "AVAILABLE")
       return res
         .status(400)
-        .json({ message: "Product is already claimed or received" });
+        .json(new ApiError(400, "Product is already claimed or received"));
 
     product.status = "CLAIMED";
     await product.save();
 
-    return res.status(200).json({ message: "Product claimed", product });
+    return res.status(200).json(new ApiResponse(product, "Product claimed"));
   } catch (err) {
     return res
       .status(500)
-      .json({ message: "Server error", error: err.message });
+      .json(new ApiError(500, err.message, err));
   }
 };
 
@@ -105,20 +132,21 @@ export const markProductAsReceived = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
 
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json(new ApiError(404, "Product not found"));
+
     if (product.status !== "CLAIMED")
-      return res.status(400).json({ message: "Product is not claimed yet" });
+      return res.status(400).json(new ApiError(400, "Product is not claimed yet"));
 
     product.status = "RECEIVED";
     await product.save();
 
     return res
       .status(200)
-      .json({ message: "Product marked as received", product });
+      .json(new ApiResponse(product, "Product marked as received"));
   } catch (err) {
     return res
       .status(500)
-      .json({ message: "Server error", error: err.message });
+      .json(new ApiError(500, err.message, err));
   }
 };
 
@@ -127,21 +155,22 @@ export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
 
-    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    if (!product) return res.status(404).json(new ApiError(404, "Product not found"));
 
     if (String(product.userId) !== String(req.user._id)) {
       return res
         .status(403)
-        .json({ message: "Unauthorized to delete this product" });
+        .json(new ApiError(403, "Unauthorized to delete this product"));
     }
 
     await Product.findByIdAndDelete(req.params.id);
 
-    return res.status(200).json({ message: "Product deleted" });
+    return res.status(200).json(new ApiResponse({}, "Product deleted"));
   } catch (err) {
     return res
       .status(500)
-      .json({ message: "Server error", error: err.message });
+      .json(new ApiError(500, err.message, err));
   }
 };
 
@@ -150,10 +179,10 @@ export const getUserProducts = async (req, res) => {
   try {
     const products = await Product.find({ userId: req.user._id });
 
-    return res.status(200).json({ products });
+    return res.status(200).json(new ApiResponse(products, "Fetched user products"));
   } catch (err) {
     return res
       .status(500)
-      .json({ message: "Server error", error: err.message });
+      .json(new ApiError(500, err.message, err));
   }
 };

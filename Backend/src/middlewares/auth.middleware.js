@@ -1,6 +1,6 @@
 import { ApiError } from "../utils/ApiError.js";
 import { AUTH_FAILED, AUTH_REQUIRED } from "../constants.js";
-import { verifyToken } from "../utils/Helper.js";
+import { verifyToken } from "../utils/helper.js";
 import { User } from "../db/models/user.model.js";
 
 /**
@@ -10,7 +10,7 @@ import { User } from "../db/models/user.model.js";
  */
 export const authMiddleware = async (req, res, next) => {
   const token =
-    req.cookies.accessToken ||
+    req.cookies?.accessToken ||
     req.headers.authorization?.replace("Bearer ", "")?.trim();
 
   if (!token) {

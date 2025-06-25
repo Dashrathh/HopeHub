@@ -13,7 +13,7 @@ cloudinary.config({
  * @param {LocalFile | LocalFile[]} localFilePaths - Single file path or array of file paths.
  * @returns {Promise<string | string[] | null>} - Secure URL(s) of the uploaded file(s).
  */
-export const uploadOnCloudinary = async (localFilePath) => {
+export const uploadOnCloudinary = async (localFilePaths) => {
   if (
     !localFilePaths ||
     (Array.isArray(localFilePaths) && localFilePaths.length === 0)
