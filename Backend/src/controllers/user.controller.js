@@ -1,42 +1,44 @@
-import { User } from "../model/user.model.js";
 import jwt from "jsonwebtoken";
+import { User } from "../db/models/user.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { AUTH_FAILED } from "../constants.js";
+import { generateTokens, isPasswordCorrect } from "../utils/Helper.js";
+
+
+const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: "lax",
+}
 
 // Register a new user
 export const registerUser = async (req, res) => {
   try {
-    const { username, email, password, mobile } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+    const { email, password, name, mobile } = req.body;
+
+    const user = await User.findOne({
+      email
+    })
+
+    if (user) {
+      return res.status(409).json(new ApiError(409, "User already exists!"));
     }
 
-    // Create and save new user
-    const user = await User.create({ username, email, password, mobile });
+    const newUser = await User.create({
+      email,
+      password,
+      name,
+      mobile
+    })
 
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    return res.status(201).json(new ApiResponse({}, "Your account created successfully!", 201))
 
-    user.refreshToken = refreshToken;
-    await user.save();
+  } catch (error) {
+    console.log(error);
 
-    // Send tokens in response
-    return res.status(201).json({
-      message: "User registered successfully",
-      user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        mobile: user.mobile,
-      },
-      accessToken,
-      refreshToken,
-    });
-  } catch (err) {
-    return res
-      .status(500)
-      .json({ message: "Server Error", error: err.message });
+    return res.status(500).json(new ApiError(500, "An error occurred while signup", error?.message))
   }
 };
 
@@ -45,36 +47,33 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if user exists
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await User.findOne({
+      email
+    }).select("+password");
 
-    // Compare password
-    const isMatch = await user.isPasswordCorrect(password);
-    if (!isMatch)
-      return res.status(401).json({ message: "Invalid credentials" });
+    if (!user) {
+      return res.status(401).json(new ApiError(401, AUTH_FAILED));
+    }
 
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    /**
+     * Check password is correct
+     */
+    if (!isPasswordCorrect(password, user.password)) {
+      return res.status(401).json(new ApiError(401, AUTH_FAILED));
+    }
 
-    user.refreshToken = refreshToken;
-    await user.save();
+    const { accessToken, refreshToken } = await generateTokens(user._id);
 
-    return res.status(200).json({
-      message: "Login successful",
-      accessToken,
-      refreshToken,
-      user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        mobile: user.mobile,
-      },
-    });
-  } catch (err) {
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
     return res
-      .status(500)
-      .json({ message: "Server Error", error: err.message });
+      .cookie("accessToken", accessToken, cookieOptions)
+      .json(new ApiResponse({ user: loggedInUser, accessToken, refreshToken }, "You've logged in successfully!"))
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json(new ApiError(500, "An error occurred while login you in", error?.message))
   }
 };
 

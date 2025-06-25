@@ -1,8 +1,8 @@
 // src/index.ts
 import express from "express";
 import dotenv from "dotenv";
-import productRoutes from "./routes/product.routes.js";
-import userRouter from "./routes/user.routes.js";
+import { productRouter } from "./routes/product.routes.js";
+import { userRouter } from "./routes/user.routes.js";
 import { ApiError } from "./utils/ApiError.js";
 
 dotenv.config();
@@ -16,8 +16,8 @@ app.use(express.urlencoded({ limit: "50KB", extended: true }));
 /**
  * Routes
  */
-app.use("/api/product", productRoutes);
-app.use("/api/v1/user", userRouter);
+app.use("/api/product", productRouter);
+app.use("/api/users", userRouter);
 
 /**
  * Error Handing

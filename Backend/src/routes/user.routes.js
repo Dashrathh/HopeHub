@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   registerUser,
   loginUser,
@@ -6,19 +6,20 @@ import {
   logoutUser,
   getProfile,
 } from "../controllers/user.controller.js";
-import { authMiddleware } from "../middlewares/authMidllware.js";
-import { multer } from "../middlewares/multer.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.js";
 
-const router = express.Router();
+export const userRouter = Router();
 
-router.post(
+userRouter.post(
   "/register",
   upload.fields([{ name: "images", maxCount: 7 }]),
   registerUser
 );
-router.post("/login", loginUser);
-router.post("/refresh-token", handleRefreshToken);
-router.post("/logout", logoutUser);
-router.get("/me", authMiddleware, getProfile);
 
-export default router;
+userRouter.post("/login", loginUser);
+userRouter.post("/refresh-token", handleRefreshToken);
+
+userRouter.post("/logout", authMiddleware, logoutUser);
+userRouter.get("/me", authMiddleware, getProfile);
+
