@@ -1,25 +1,42 @@
+// src/index.ts
 import express from "express";
-import cors from "cors";
-import { PrismaClient } from "../generated/prisma";
-import ProductRouter from "./routes/product.routes.js";
+import dotenv from "dotenv";
+import { productRouter } from "./routes/product.routes.js";
+import { ApiError } from "./utils/ApiError.js";
 
-const app = express();
-const prisma = new PrismaClient();
+dotenv.config();
 
-app.use(cors());
-app.use(express.json());
+export const port = process.env.PORT || 3001;
 
-app.use("/api/product", ProductRouter);
+export const app = express();
+app.use(express.json({ limit: "50KB" }));
+app.use(express.urlencoded({ limit: "50KB", extended: true }));
 
-app.get("/", (_req, res) => {
-  res.send("API is running ");
+/**
+ * Routes
+ */
+app.use("/api/product", productRouter);
+
+/**
+ * Error Handing
+ */
+app.use((err, req, res, next) => {
+  console.log(err);
+
+  if (err?.statusCode) {
+    return res.status(err.statusCode || 500).json(err);
+  }
+
+  return res
+    .status(err?.statusCode || 500)
+    .json(
+      new ApiError(err.statusCode || 500, "An error occurred", err.message)
+    );
 });
 
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(` Server is running at http://localhost:${PORT}`);
+/**
+ * 404 errors
+ */
+app.use("*", (req, res) => {
+  return res.status(404).json(new ApiError(404, "Page not found"));
 });

@@ -1,4 +1,4 @@
-import express, { Router } from "express";
+import { Router } from "express";
 
 import {
   createProduct,
@@ -6,14 +6,19 @@ import {
   deleteProduct,
   getAllProducts,
   getSingleProduct,
-} from "../controller/Product.controller.js";
+} from "../controllers/product.controller.js";
 
-const router = express.Router();
+import { upload } from "../middlewares/multer.js";
 
-router.post("/", createProduct);
-router.get("/", getAllProducts);
-router.get("/:id", getSingleProduct);
-router.put("/:id", updateProduct);
-router.delete("/:id", deleteProduct);
+export const productRouter = Router();
 
-export default router;
+productRouter.post(
+  "/",
+  upload.fields([{ name: "image", maxCount: 10 }]),
+  createProduct
+);
+productRouter.get("/", getAllProducts);
+productRouter
+  .get("/:id", getSingleProduct)
+  .put("/:id", updateProduct)
+  .delete("/:id", deleteProduct);

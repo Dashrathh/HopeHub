@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
 import dotenv from "dotenv";
+import fs from "fs";
 
 dotenv.config();
 
@@ -10,15 +10,18 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+
 /**
- * @param {string | string[]} localFilePaths - Single file path or array of file paths.
- * @returns {Promise<string | string[]>} - Secure URL(s) of the uploaded file(s).
+ * @param {LocalFile | LocalFile[]} localFilePaths - Single file path or array of file paths.
+ * @returns {Promise<string | string[] | null>} - Secure URL(s) of the uploaded file(s).
  */
+export const uploadOnCloudinary = async (localFilePath) => {
+  if (
+    !localFilePaths ||
+    (Array.isArray(localFilePaths) && localFilePaths.length === 0)
+  )
+    return null;
 
-const uploadOnCloudinary = async (localFilePaths) => {
-  if (!localFilePaths || localFilePaths.length === 0) return null;
-
-  // Ensure localFilePaths is always an array (single file -> array)
   const filePaths = Array.isArray(localFilePaths)
     ? localFilePaths
     : [localFilePaths];
@@ -27,15 +30,12 @@ const uploadOnCloudinary = async (localFilePaths) => {
 
   try {
     const uploadPromises = filePaths.map(async (filePath) => {
-      // Normalize path to handle Windows-style backslashes
-
       const normalizedPath = filePath.path.replace(/\\/g, "/");
 
       const response = await cloudinary.uploader.upload(normalizedPath, {
         resource_type: "auto",
       });
 
-      // Delete the local file after uploading
       fs.unlinkSync(normalizedPath);
 
       return response.secure_url;
@@ -43,18 +43,18 @@ const uploadOnCloudinary = async (localFilePaths) => {
 
     const uploadedUrls = await Promise.all(uploadPromises);
 
-    // Return single URL if only one file was uploaded, else return an array
     return uploadedUrls.length === 1 ? uploadedUrls[0] : uploadedUrls;
   } catch (error) {
     console.error("Error uploading to Cloudinary:", error);
-    // Ensure cleanup even if error occurs
-    if (Array.isArray(filePaths)) {
-      filePaths.forEach((file) => fs.unlinkSync(file.path));
-    } else {
-      fs.unlinkSync(filePaths[0]);
-    }
+
+    filePaths.forEach((file) => {
+      try {
+        fs.unlinkSync(file.path);
+      } catch (e) {
+        console.error("Error deleting file:", e);
+      }
+    });
+
     return null;
   }
 };
-
-export { uploadOnCloudinary };
