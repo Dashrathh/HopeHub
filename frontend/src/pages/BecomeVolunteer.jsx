@@ -1,5 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
+import { HopeAPI } from "../utils/api";
+import { toast } from "react-toastify";
 
 const BecomeVolunteer = () => {
   const [form, setForm] = useState({
@@ -22,13 +23,9 @@ const BecomeVolunteer = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      await axios.post("/api/volunteers/register", form, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await HopeAPI.post("/volunteers/register", form);
 
-      alert("You are now a volunteer!");
+      toast.success("You are now a volunteer!");
       setForm({
         name: "",
         email: "",
@@ -38,7 +35,7 @@ const BecomeVolunteer = () => {
         message: "",
       });
     } catch (err) {
-      alert("Failed: " + (err.response?.data?.message || err.message));
+      toast.error("Failed: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { HopeAPI } from "../utils/api"
+import { toast } from "react-toastify";
 
 const AllProducts = () => {
   const [products, setProducts] = useState([]);
@@ -7,7 +8,7 @@ const AllProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data: res } = await axios.get("/api/products");
+      const { data: res } = await HopeAPI.get("/products");
       setProducts(res.data || []);
     } catch (err) {
       console.error("Failed to fetch products", err);
@@ -25,19 +26,12 @@ const AllProducts = () => {
     if (!token) return alert("Please login to claim");
 
     try {
-      await axios.patch(
-        `/api/products/${productId}/claim`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      alert("Product claimed successfully!");
+      await HopeAPI.patch(`/products/${productId}/claim`);
+      toast.success("Product claimed successfully!");
+
       fetchProducts();
     } catch (err) {
-      alert(
+      toast.error(
         "Error claiming product: " +
         (err.response?.data?.message || err.message)
       );

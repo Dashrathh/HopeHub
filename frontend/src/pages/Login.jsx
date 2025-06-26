@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { toast } from "react-toastify";
+import { HopeAPI } from "../utils/api";
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -12,16 +13,13 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        "/api/users/login",
-        form
-      );
+      const res = await HopeAPI.post("/users/login", form);
       const token = res.data.token;
       localStorage.setItem("token", token);
-      alert("Login successful");
+      toast.success("Login successful");
       navigate("/");
     } catch (err) {
-      alert("Login failed: " + (err.response?.data?.message || err.message));
+      toast.error("Login failed: " + (err.response?.data?.message || err.message));
     }
   };
 

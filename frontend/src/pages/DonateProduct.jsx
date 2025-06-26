@@ -1,9 +1,10 @@
 import { useState } from "react";
-import axios from "axios";
+import { toast } from "react-toastify";
+import { HopeAPI } from "../utils/api";
 
 const DonateProduct = () => {
   const [form, setForm] = useState({
-    name: "",
+    title: "",
     description: "",
     category: "",
   });
@@ -27,15 +28,14 @@ const DonateProduct = () => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      
+      await HopeAPI.post("/products", formData);
 
-      await axios.post("/api/products", formData);
-
-      alert("Product donated successfully!");
-      setForm({ name: "", description: "", category: "" });
+      toast.success("Product donated successfully!");
+      setForm({ title: "", description: "", category: "" });
       setImage(null);
     } catch (error) {
-      alert(
+      toast.error(
         "Failed to donate: " + (error.response?.data?.message || error.message)
       );
     } finally {
@@ -51,7 +51,7 @@ const DonateProduct = () => {
           type="text"
           name="title"
           placeholder="Product Name"
-          value={form.name}
+          value={form.title}
           onChange={handleChange}
           className="w-full p-2 border rounded"
           required

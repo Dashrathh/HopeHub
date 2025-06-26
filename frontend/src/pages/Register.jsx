@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { toast } from "react-toastify";
+import { HopeAPI } from "../utils/api";
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -19,11 +20,11 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/api/users/register", form);
-      alert("Registration successful!");
+      await HopeAPI.post("/users/register", form);
+      toast.success("Registration successful!");
       navigate("/login");
     } catch (err) {
-      alert(
+      toast.error(
         "Registration failed: " + (err.response?.data?.message || err.message)
       );
     }
