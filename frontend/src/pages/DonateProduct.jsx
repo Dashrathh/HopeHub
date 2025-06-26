@@ -22,22 +22,14 @@ const DonateProduct = () => {
 
     if (!image) return alert("Please select an image");
 
-    const formData = new FormData();
-    formData.append("name", form.name);
-    formData.append("description", form.description);
-    formData.append("category", form.category);
-    formData.append("image", image);
+    const formData = new FormData(e.target);
+    formData.set("images", image);
 
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      await axios.post("http://localhost:3001/api/products", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axios.post("/api/products", formData);
 
       alert("Product donated successfully!");
       setForm({ name: "", description: "", category: "" });
@@ -57,7 +49,7 @@ const DonateProduct = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          name="name"
+          name="title"
           placeholder="Product Name"
           value={form.name}
           onChange={handleChange}
@@ -81,6 +73,8 @@ const DonateProduct = () => {
           className="w-full p-2 border rounded"
         />
         <input
+          name="images"
+          multiple={true}
           type="file"
           onChange={handleImageChange}
           accept="image/*"

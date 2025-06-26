@@ -8,10 +8,10 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const userRes = await axios.get("http://localhost:3001/api/admin/users", {
+      const userRes = await axios.get("/api/admin/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const productRes = await axios.get("http://localhost:3001/api/products", {
+      const productRes = await axios.get("/api/products", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(userRes.data.users || []);
@@ -24,7 +24,7 @@ const AdminDashboard = () => {
   const deleteUser = async (id) => {
     if (!window.confirm("Delete this user?")) return;
     try {
-      await axios.delete(`http://localhost:3001/api/admin/users/${id}`, {
+      await axios.delete(`/api/admin/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchData();
@@ -36,7 +36,7 @@ const AdminDashboard = () => {
   const deleteProduct = async (id) => {
     if (!window.confirm("Delete this product?")) return;
     try {
-      await axios.delete(`http://localhost:3001/api/products/${id}`, {
+      await axios.delete(`/api/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchData();

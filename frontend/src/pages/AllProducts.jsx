@@ -7,8 +7,8 @@ const AllProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:3001/api/products");
-      setProducts(res.data.products || []);
+      const { data: res } = await axios.get("/api/products");
+      setProducts(res.data || []);
     } catch (err) {
       console.error("Failed to fetch products", err);
     } finally {
@@ -25,8 +25,8 @@ const AllProducts = () => {
     if (!token) return alert("Please login to claim");
 
     try {
-      await axios.post(
-        `http://localhost:3001/api/products/claim/${productId}`,
+      await axios.patch(
+        `/api/products/${productId}/claim`,
         {},
         {
           headers: {
@@ -39,7 +39,7 @@ const AllProducts = () => {
     } catch (err) {
       alert(
         "Error claiming product: " +
-          (err.response?.data?.message || err.message)
+        (err.response?.data?.message || err.message)
       );
     }
   };
@@ -64,7 +64,7 @@ const AllProducts = () => {
             className="bg-white border rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-4 flex flex-col justify-between"
           >
             <img
-              src={product.imageUrl}
+              src={product.image[product.image.length - 1]}
               alt={product.name}
               className="w-full h-48 object-cover rounded-xl mb-3"
             />

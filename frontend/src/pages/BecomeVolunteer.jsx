@@ -4,6 +4,7 @@ import axios from "axios";
 const BecomeVolunteer = () => {
   const [form, setForm] = useState({
     name: "",
+    password: "",
     email: "",
     phone: "",
     address: "",
@@ -21,7 +22,7 @@ const BecomeVolunteer = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      await axios.post("http://localhost:3001/api/volunteers", form, {
+      await axios.post("/api/volunteers/register", form, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -31,6 +32,7 @@ const BecomeVolunteer = () => {
       setForm({
         name: "",
         email: "",
+        password: "",
         phone: "",
         address: "",
         message: "",
@@ -62,6 +64,15 @@ const BecomeVolunteer = () => {
           name="email"
           placeholder="Email"
           value={form.email}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+          required
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={form.password}
           onChange={handleChange}
           className="w-full p-2 border rounded"
           required

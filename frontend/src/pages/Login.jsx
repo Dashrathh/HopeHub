@@ -13,7 +13,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/users/login",
+        "/api/users/login",
         form
       );
       const token = res.data.token;
