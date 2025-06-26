@@ -23,9 +23,9 @@ const createVersionRoute = (route, version = 1) =>
 /**
  * Routes
  */
-app.use("/api/product", productRouter);
+app.use("/api/products", productRouter);
 app.use("/api/users", userRouter);
-app.use("/api/volunteer", VolunteerRouter);
+app.use("/api/volunteers", VolunteerRouter);
 app.use("/api/admin", adminRouter);
 
 /**
