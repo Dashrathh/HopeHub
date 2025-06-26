@@ -15,6 +15,9 @@ app.use(express.json({ limit: "50KB" }));
 app.use(express.urlencoded({ limit: "50KB", extended: true }));
 app.use(cookieParser());
 
+
+const createVersionRoute = (route, version = 1) => "/api/v" + version + "/" + route;
+
 /**
  * Routes
  */

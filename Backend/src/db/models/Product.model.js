@@ -22,7 +22,7 @@ const productSchema = new mongoose.Schema({
     enum: ["AVAILABLE", "CLAIMED", "RECEIVED"],
     default: "AVAILABLE",
   },
-  userId: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,

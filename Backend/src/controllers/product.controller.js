@@ -51,7 +51,7 @@ export const createProduct = async (req, res) => {
       description,
       category,
       image: uploadedImages,
-      userId,
+      user: userId,
     });
 
     return res
@@ -74,8 +74,8 @@ export const getAllProducts = async (req, res) => {
     if (category) filter.category = category;
 
     const products = await Product.find(filter).populate(
-      "userId",
-      "username email"
+      "user",
+      "name email"
     );
 
     return res.json(new ApiResponse(products, "Fetched all products"));
@@ -90,8 +90,8 @@ export const getAllProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
-      "userId",
-      "username email"
+      "user",
+      "name email"
     );
 
     if (!product) return res.status(404).json(new ApiError(404, "Product not found"));
@@ -158,7 +158,7 @@ export const deleteProduct = async (req, res) => {
 
     if (!product) return res.status(404).json(new ApiError(404, "Product not found"));
 
-    if (String(product.userId) !== String(req.user._id)) {
+    if (String(product.user) !== String(req.user._id)) {
       return res
         .status(403)
         .json(new ApiError(403, "Unauthorized to delete this product"));
@@ -177,7 +177,7 @@ export const deleteProduct = async (req, res) => {
 // Get all products donated by a specific user
 export const getUserProducts = async (req, res) => {
   try {
-    const products = await Product.find({ userId: req.user._id });
+    const products = await Product.find({ user: req.user._id });
 
     return res.status(200).json(new ApiResponse(products, "Fetched user products"));
   } catch (err) {
