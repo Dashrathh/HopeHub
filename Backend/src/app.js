@@ -6,6 +6,8 @@ import { userRouter } from "./routes/user.routes.js";
 import { ApiError } from "./utils/ApiError.js";
 import cookieParser from "cookie-parser";
 
+import VolunteerRouter from "./routes/volunteer.routes.js";
+import AdminRouter from "./routes/admin.routes.js";
 dotenv.config();
 
 export const port = process.env.PORT || 3001;
@@ -15,14 +17,16 @@ app.use(express.json({ limit: "50KB" }));
 app.use(express.urlencoded({ limit: "50KB", extended: true }));
 app.use(cookieParser());
 
-
-const createVersionRoute = (route, version = 1) => "/api/v" + version + "/" + route;
+const createVersionRoute = (route, version = 1) =>
+  "/api/v" + version + "/" + route;
 
 /**
  * Routes
  */
 app.use("/api/product", productRouter);
 app.use("/api/users", userRouter);
+app.use("/api/volunteer", VolunteerRouter);
+app.use("/api/admin", AdminRouter);
 
 /**
  * Error Handing
