@@ -28,7 +28,7 @@ productRouter.use(authMiddleware)
   upload.fields([{ name: "images", maxCount: 7 }]),
   createProduct
 )
-.get("/my", authMiddleware, getUserProducts)
-.patch("/:id/claim", authMiddleware, claimProduct)
-.patch("/:id/receive", authMiddleware, markProductAsReceived)
-.delete("/:id", authMiddleware, deleteProduct);
+.get("/my", getUserProducts)
+.patch("/:id/claim", claimProduct)
+.patch("/:id/receive", markProductAsReceived)
+.delete("/:id", deleteProduct);

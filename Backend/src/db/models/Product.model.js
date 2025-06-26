@@ -1,10 +1,22 @@
 import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: String,
-  category: String,
-  image: String,
+  title: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+  },
+  category: {
+    type: String,
+    required: true
+  },
+  image: [
+    {
+      type: String
+    }
+  ],
   status: {
     type: String,
     enum: ["AVAILABLE", "CLAIMED", "RECEIVED"],
@@ -13,6 +25,7 @@ const productSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: true,
   },
 });
 
