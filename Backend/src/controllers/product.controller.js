@@ -22,8 +22,7 @@ export const createProduct = async (req, res) => {
      */
     const productExists = await Product.findOne({
       title,
-      description,
-      category
+      user: userId
     })
 
     if (productExists) {

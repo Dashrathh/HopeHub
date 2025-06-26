@@ -1,4 +1,3 @@
-import jwt from "jsonwebtoken";
 import { Admin } from "../db/models/admin.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";

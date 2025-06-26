@@ -1,6 +1,6 @@
 // db/models/admin.model.js
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "../../utils/helper.js";
 
 const adminSchema = new mongoose.Schema(
   {
@@ -14,7 +14,7 @@ const adminSchema = new mongoose.Schema(
 // password hashing
 adminSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = await hashPassword(this.password);
   next();
 });
 

@@ -5,9 +5,9 @@ import { productRouter } from "./routes/product.routes.js";
 import { userRouter } from "./routes/user.routes.js";
 import { ApiError } from "./utils/ApiError.js";
 import cookieParser from "cookie-parser";
-
 import VolunteerRouter from "./routes/volunteer.routes.js";
-import AdminRouter from "./routes/admin.routes.js";
+import { adminRouter } from "./routes/admin.routes.js";
+
 dotenv.config();
 
 export const port = process.env.PORT || 3001;
@@ -26,7 +26,7 @@ const createVersionRoute = (route, version = 1) =>
 app.use("/api/product", productRouter);
 app.use("/api/users", userRouter);
 app.use("/api/volunteer", VolunteerRouter);
-app.use("/api/admin", AdminRouter);
+app.use("/api/admin", adminRouter);
 
 /**
  * Error Handing
