@@ -19,7 +19,9 @@ const Login = () => {
       toast.success("Login successful");
       navigate("/");
     } catch (err) {
-      toast.error("Login failed: " + (err.response?.data?.message || err.message));
+      toast.error(
+        "Login failed: " + (err.response?.data?.message || err.message)
+      );
     }
   };
 
@@ -52,6 +54,16 @@ const Login = () => {
           Login
         </button>
       </form>
+      <div className="mt-4 text-center">
+        <span>Don't have an account? </span>
+        <button
+          className="text-blue-600 hover:underline"
+          onClick={() => navigate("/register")}
+          type="button"
+        >
+          Sign up
+        </button>
+      </div>
     </div>
   );
 };

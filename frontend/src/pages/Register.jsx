@@ -8,7 +8,7 @@ const Register = () => {
     name: "",
     email: "",
     password: "",
-    phone: "",
+    mobile: "",
     address: "",
   });
 
@@ -63,9 +63,9 @@ const Register = () => {
         />
         <input
           type="text"
-          name="phone"
+          name="mobile"
           placeholder="Phone"
-          value={form.phone}
+          value={form.mobile}
           onChange={handleChange}
           className="w-full p-2 border rounded"
         />

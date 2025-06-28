@@ -1,8 +1,36 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import DonateDropdown from "../pages/DonateDropdown";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios
+        .get("http://localhost:3001/api/users/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((res) => {
+          setUser(res.data.user);
+        })
+        .catch(() => {
+          localStorage.removeItem("token");
+        });
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+    navigate("/login");
+  };
 
   return (
     <nav className="bg-white text-teal-700 shadow sticky top-0 z-50">
@@ -23,24 +51,38 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <NavLink to="/" label="Home" />
-            <NavLink to="/donate" label="Donate" />
+            <DonateDropdown />
             <NavLink to="/products" label="Products" />
             <NavLink to="/volunteer" label="Volunteer" />
             <NavLink to="/about" label="About" />
             <NavLink to="/contact" label="Contact" />
           </div>
 
-          {/* Login button (Desktop) */}
+          {/* Right Section: Login or User */}
           <div className="hidden md:flex items-center">
-            <Link
-              to="/login"
-              className="ml-4 px-4 py-2 rounded-md text-sm font-medium bg-amber-500 hover:bg-amber-400 transition"
-            >
-              Login
-            </Link>
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <div className="bg-teal-500 text-white w-10 h-10 flex items-center justify-center rounded-full font-bold uppercase">
+                  {user.name?.charAt(0)}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 rounded-md text-sm font-medium bg-red-500 text-white hover:bg-red-400 transition"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="ml-4 px-4 py-2 rounded-md text-sm font-medium bg-amber-500 hover:bg-amber-400 transition"
+              >
+                Login
+              </Link>
+            )}
           </div>
 
-          {/* Mobile Toggle Button */}
+          {/* Mobile Toggle */}
           <button
             className="md:hidden text-teal-700 focus:outline-none"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -76,12 +118,21 @@ const Navbar = () => {
             <NavLink to="/volunteer" label="Volunteer" mobile />
             <NavLink to="/about" label="About" mobile />
             <NavLink to="/contact" label="Contact" mobile />
-            <Link
-              to="/login"
-              className="block w-full px-4 py-2 rounded-md text-base font-medium bg-amber-500 text-center text-white hover:bg-amber-400"
-            >
-              Login
-            </Link>
+            {user ? (
+              <button
+                onClick={handleLogout}
+                className="block w-full px-4 py-2 rounded-md text-base font-medium bg-red-500 text-center text-white hover:bg-red-400"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="block w-full px-4 py-2 rounded-md text-base font-medium bg-amber-500 text-center text-white hover:bg-amber-400"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       )}
@@ -89,7 +140,7 @@ const Navbar = () => {
   );
 };
 
-// 🧩 Reusable Link Component
+// ✅ Reusable NavLink
 const NavLink = ({ to, label, mobile = false }) => (
   <Link
     to={to}
